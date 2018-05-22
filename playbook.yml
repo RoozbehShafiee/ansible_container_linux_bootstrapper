@@ -1,0 +1,12 @@
+---
+
+- name: bootstrap Container Linux by CoreOS
+  hosts: cluster
+  become: yes
+  gather_facts: False
+  tasks:
+    - include: tasks/coreos.yml
+  vars_files:
+    - defaults/main.yml
+  tags:
+    - coreos

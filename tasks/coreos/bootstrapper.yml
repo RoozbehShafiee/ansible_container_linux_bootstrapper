@@ -1,0 +1,53 @@
+---
+
+- name: Container Linux | check if bootstrap is needed
+  raw: stat /opt/bin/.bootstrapped
+  register: need_bootstrap
+  ignore_errors: True
+
+- name: Container Linux | run bootstrap.sh
+  script: "{{static_files_dir}}/bootstrap.sh"
+  register: bootstrap_script
+  when: need_bootstrap is failed
+
+- name: Container Linux | check if we need to install pip
+  shell: "{{ansible_python_interpreter}} -m pip --version"
+  register: need_pip
+  failed_when: false
+  when:
+    - need_bootstrap is failed
+    - bootstrap_script is succeeded
+
+- name: Container Linux | download get-pip.py
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: ~/get-pip.py
+  register: get_pip
+  when:
+    - need_bootstrap is failed
+    - need_pip is succeeded
+
+- name: Container Linux | install pip
+  shell: "{{ansible_python_interpreter}} ~/get-pip.py"
+  register: install_pip
+  when:
+    - need_bootstrap is failed
+    - need_pip is succeeded
+
+- name: Container Linux | remove get-pip.py
+  file:
+    path: ~/get-pip.py
+    state: absent
+  when:
+    - need_bootstrap is failed
+    - get_pip is succeeded
+    - install_pip is succeeded
+
+- name: Container Linux | install pip launcher
+  copy:
+    src: runner
+    dest: /opt/bin/pip
+    mode: 0755
+  when:
+    - need_bootstrap is failed
+    - install_pip is succeeded

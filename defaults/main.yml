@@ -1,0 +1,6 @@
+---
+
+static_files_dir: "files"
+ansible_python_interpreter: "/opt/bin/python"
+pip_python_modules:
+  - docker-py
